@@ -45,10 +45,13 @@ QPixmap ScreenGrabber::grabEntireDesktop(bool& ok)
                 // https://github.com/GNOME/gnome-shell/blob/695bfb96160033be55cfb5ac41c121998f98c328/data/org.gnome.Shell.Screenshot.xml
                 QString path = FileNameHandler().properScreenshotPath(
                   QDir::tempPath(), "png");
+                QDBusConnection connection = QDBusConnection::sessionBus();
+                connection.registerService("org.gnome.Screenshot");
                 QDBusInterface gnomeInterface(
                   QStringLiteral("org.gnome.Shell"),
                   QStringLiteral("/org/gnome/Shell/Screenshot"),
-                  QStringLiteral("org.gnome.Shell.Screenshot"));
+                  QStringLiteral("org.gnome.Shell.Screenshot"),
+                  connection);
                 QDBusReply<bool> reply = gnomeInterface.call(
                   QStringLiteral("Screenshot"), false, false, path);
                 if (reply.value()) {
@@ -58,6 +61,7 @@ QPixmap ScreenGrabber::grabEntireDesktop(bool& ok)
                 } else {
                     ok = false;
                 }
+                connection.unregisterService("org.gnome.Screenshot");
                 break;
             }
             case DesktopInfo::KDE: {
